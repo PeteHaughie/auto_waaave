@@ -12,52 +12,47 @@
 
 #include "ofMain.h"
 #include "ofxMidi.h"
-//#include "ofxOMXVideoGrabber.h"
 #include "ofxProcessFFT.h"
 
-class ofApp : public ofBaseApp, public ofxMidiListener {
-	
+class ofApp : public ofBaseApp, public ofxMidiListener
+{
+
 public:
-	
 	void setup();
 	void update();
 	void draw();
 	void exit();
-	
+
 	void keyPressed(int key);
 	void keyReleased(int key);
-	/*
-	void omx_settings();
-	void omx_updates();
-	ofxOMXCameraSettings settings;
-    ofxOMXVideoGrabber videoGrabber;
-	*/
+
 	void midibiz();
 	void midibizOld();
-	void newMidiMessage(ofxMidiMessage& eventArgs);
+	void newMidiMessage(ofxMidiMessage &eventArgs);
 	void midiSetup();
 	ofxMidiIn midiIn;
 	std::vector<ofxMidiMessage> midiMessages;
 	std::size_t maxMessages = 10; //< max number of messages to keep track of
 
-	ofShader shader_mixer;
+	ofShader shaderMixer;
 	ofShader shaderSharpen;
 
 	void fbDeclareAndAllocate();
-    ofFbo framebuffer0;
-    ofFbo framebuffer1;
-    ofFbo sharpenFramebuffer;
-    
-    void inputSetup();
-    void inputUpdate();
-    ofVideoGrabber cam1;
-    
-    void p_lockClear();
-    void p_lockUpdate();
+	ofFbo framebuffer0;
+	ofFbo framebuffer1;
+	ofFbo sharpenFramebuffer;
 
-    ProcessFFT fft;
-    void fftAssignValues();
-    
-    void parametersAssign();
-    void midiLatchClear();
+	void inputSetup();
+	void inputUpdate();
+	ofVideoGrabber cam;
+	unsigned long int midiID = 0, prevMidiID = 0;
+
+	void p_lockClear();
+	void p_lockUpdate();
+
+	ProcessFFT fft;
+	void fftAssignValues();
+
+	void parametersAssign();
+	void midiLatchClear();
 };

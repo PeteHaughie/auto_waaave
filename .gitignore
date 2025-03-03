@@ -1,0 +1,30 @@
+.DS_Store
+*.xcodeproj
+Project.xcconfig
+obj
+browse.db
+browse.db-shm
+browse.db-wal
+
+## Media filetypes used by the app
+# .mp4 - original formats in h264
+# .mov - Mac OS native format
+# .avi - Windows native format
+# .hpv - Custom high performance format for extremeley large videos
+##
+
+bin/data/clips/*.avi
+bin/data/clips/*.mov
+bin/data/clips/*.mp4
+bin/data/clips/*.hpv
+bin/data/images
+bin/screenshots
+bin/recordings
+
+# wildcards
+*.app
+*.exe
+*.plist
+*.log
+*.dll.code-workspace
+*.code-workspace
