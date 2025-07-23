@@ -50,7 +50,8 @@ uniform float vHuexOff;
 uniform float vHuexLfo;
 
 //location
-varying vec2 texCoordVarying;
+uniform vec2 resolution;
+// varying vec2 texCoordVarying;
 
 //---------------------------------------------------------------
 vec2 mirrorCoord(vec2 inCoord, vec2 inDim) {
@@ -106,6 +107,8 @@ vec3 hsb2rgb(vec3 c) {
 //---------------------------------------------------------------------
 
 void main() {
+  vec2 uv = resolution.xy;
+  vec2 texCoordVarying = gl_FragCoord.xy / uv; // Normalize the coordinates
   //important to note that texCoordVarying here seems to be automatically scaled between 0 and 1
 
   //define a dummy color that we use at the end of the chain when keying/mixing
@@ -309,6 +312,6 @@ void main() {
     temporalFilterColor,
     temporalFilterMix + vtemporalFilterMix * VVV
   );
-
+  // color = vec4(1.0, 0.0, 0.0, 1.0);
   gl_FragColor = color;
 }

@@ -1,14 +1,5 @@
-#version 120
-
-// these are for the programmable pipeline system
-uniform mat4 modelViewProjectionMatrix;
-
-attribute vec4 position;
-attribute vec2 texcoord;
-
-varying vec2 texCoordVarying;
+OF_GLSL_SHADER_HEADER
 
 void main() {
-  texCoordVarying = texcoord;
-  gl_Position = modelViewProjectionMatrix * position;
+  gl_Position = ftransform();
 }

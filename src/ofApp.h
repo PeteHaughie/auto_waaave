@@ -18,41 +18,42 @@ class ofApp : public ofBaseApp, public ofxMidiListener
 {
 
 public:
-	void setup();
-	void update();
-	void draw();
-	void exit();
+  void setup();
+  void update();
+  void draw();
+  void exit();
 
-	void keyPressed(int key);
-	void keyReleased(int key);
+  void keyPressed(int key);
+  void keyReleased(int key);
 
-	void midibiz();
-	void midibizOld();
-	void newMidiMessage(ofxMidiMessage &eventArgs);
-	void midiSetup();
-	ofxMidiIn midiIn;
-	std::vector<ofxMidiMessage> midiMessages;
-	std::size_t maxMessages = 10; //< max number of messages to keep track of
+  void midibiz();
+  void midibizOld();
+  void newMidiMessage(ofxMidiMessage &eventArgs);
+  void midiSetup();
+  ofxMidiIn midiIn;
+  std::vector<ofxMidiMessage> midiMessages;
+  std::size_t maxMessages = 10; //< max number of messages to keep track of
 
-	ofShader shaderMixer;
-	ofShader shaderSharpen;
+  ofShader shaderMixer;
+  ofShader shaderSharpen;
 
-	void fbDeclareAndAllocate();
-	ofFbo framebuffer0;
-	ofFbo framebuffer1;
-	ofFbo sharpenFramebuffer;
+  void fbDeclareAndAllocate();
+  ofFbo framebuffer0;
+  ofFbo framebuffer1;
+  ofFbo sharpenFramebuffer;
 
-	void inputSetup();
-	void inputUpdate();
-	ofVideoGrabber cam;
-	unsigned long int midiID = 0, prevMidiID = 0;
+  void inputSetup();
+  void inputUpdate();
+  ofVideoGrabber cam;
+  unsigned long int camID = 0, prevCamID = 0;
+  unsigned long int midiID = 0, prevMidiID = 0;
 
-	void p_lockClear();
-	void p_lockUpdate();
+  void p_lockClear();
+  void p_lockUpdate();
 
-	ProcessFFT fft;
-	void fftAssignValues();
+  ProcessFFT fft;
+  void fftAssignValues();
 
-	void parametersAssign();
-	void midiLatchClear();
+  void parametersAssign();
+  void midiLatchClear();
 };

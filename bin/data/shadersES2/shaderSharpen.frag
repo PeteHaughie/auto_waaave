@@ -4,7 +4,8 @@ uniform sampler2D tex0;
 
 uniform float sharpenAmount;
 uniform float vSharpenAmount;
-varying vec2 texCoordVarying;
+// varying vec2 texCoordVarying;
+uniform vec2 resolution;
 
 //-------------------------
 vec3 rgb2hsb(in vec3 c)
@@ -27,6 +28,8 @@ vec3 hsb2rgb(in vec3 c)
 //-------------------------
 void main()
 {
+	vec2 uv = resolution.xy;
+	vec2 texCoordVarying = gl_FragCoord.xy / uv; // Normalize the coordinates
 	vec4 outColor=vec4(1.0,0.0,1.0,1.0);
 	//first we try to just sharpen brightness
 	
@@ -64,5 +67,8 @@ void main()
 	outColor.rgb=hsb2rgb(ogColorHSB);
 	outColor.a=1.0;
 	//color.rgb=1.0-color.rgb;
+
+	// outColor = vec4(1.0, 0.0, 0.0, 1.0);
+
 	gl_FragColor = outColor;//texture2D(tex0,texCoordVarying);
 }
