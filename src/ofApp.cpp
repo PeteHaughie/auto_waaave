@@ -35,7 +35,7 @@ bool wet_dry_switch = 1;
 // use definitely with all of the VSERPI devices
 // and anything else doing like 480i/p over hdmi
 // 1 is corner cropping to fill the screen
-int hdmi_aspect_ratio_switch = 1;
+int hdmi_aspect_ratio_switch = 0;
 
 float az = 1.0;
 float sx = 0;
@@ -837,7 +837,7 @@ void ofApp::keyPressed(int key)
   } // endifkey
 
   // aspect ratio fix
-  if (key == 'q')
+  if (key == 'q' || key =='*')
   {
     hdmi_aspect_ratio_switch = 1 - hdmi_aspect_ratio_switch;
     ofLog() << "hdmi_aspect_ratio_switch: "
