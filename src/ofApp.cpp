@@ -289,17 +289,22 @@ float d_rotate;
 float d_huex_mod;
 float d_huex_off;
 float d_huex_lfo;
+
 //--------------------------------------------------------------
 void ofApp::setup()
 {
-  // ofSetVerticalSync(true);
   ofSetFrameRate(30);
+  ofSetVerticalSync(false);
   ofBackground(ofColor::red);
   ofDisableArbTex();
-  // ofToggleFullscreen();
   ofHideCursor();
   inputSetup();
-  midiSetup();
+  incrementMidiDeviceID(); // this is our midi setup
+
+  midiIn.ignoreTypes(false, false, false);
+  midiIn.addListener(this);
+  midiIn.setVerbose(true);
+
   fbDeclareAndAllocate();
   shaderMixer.load("shadersES2/shaderMixer");
   shaderSharpen.load("shadersES2/shaderSharpen");
@@ -330,15 +335,25 @@ void ofApp::update()
   fft.update();
   inputUpdate();
 
-  if (midiID != prevMidiID)
+  // MIDI device polling logic
+  if (!midiDeviceConnected)
   {
-    midiIn.closePort();
-    midiIn.openPort(midiID);
-    ofLog() << "midiID: " << midiID;
-    prevMidiID = midiID;
+    uint64_t now = ofGetElapsedTimeMillis();
+    if (now - lastMidiPollTime > midiPollInterval)
+    {
+      incrementMidiDeviceID();
+      // Check if a device is now connected
+      if (midiIn.isOpen())
+      {
+        midiDeviceConnected = true;
+        ofLogNotice() << "MIDI device connected!";
+      }
+      lastMidiPollTime = now;
+    }
   }
 
   midibiz();
+
   p_lockUpdate();
 
   if (fft.getLowVal() > my_normalize)
@@ -702,6 +717,10 @@ void ofApp::parametersAssign()
 //--------------------------------------------------------------
 void ofApp::newMidiMessage(ofxMidiMessage &msg)
 {
+  ofLogNotice() << "Received MIDI message: status=" << msg.status
+                << " channel=" << msg.channel
+                << " control=" << msg.control
+                << " value=" << msg.value;
   // add the latest message to the message queue
   midiMessages.push_back(msg);
   // remove any old messages if we have too many
@@ -749,31 +768,6 @@ void ofApp::p_lockClear()
       p_lock[i][j] = 0;
     }
   }
-}
-
-//------------------------------------------------------------
-void ofApp::midiSetup()
-{
-  incrementMidiDeviceID();
-  /*
-  // print input ports to console
-  midiIn.listInPorts();
-
-  // open port by number (you may need to change this)
-  midiIn.openPort(midiID);
-  // midiIn.openPort("IAC Pure Data In");	// by name
-  // midiIn.openVirtualPort("ofxMidiIn Input"); // open a virtual port
-
-  // don't ignore sysex, timing, & active sense messages,
-  // these are ignored by default
-  midiIn.ignoreTypes(false, false, false);
-
-  // add ofApp as a listener
-  midiIn.addListener(this);
-
-  // print received messages to the console
-  midiIn.setVerbose(true);
-  */
 }
 
 //-------------------------------------------------------------
@@ -1142,7 +1136,6 @@ void ofApp::keyPressed(int key)
 //------------------------------------------------------------------
 void ofApp::midibiz()
 {
-
   // lets figure out the hd switch thing here
   // bool cc_aspect_switch=0;
   // int cc_aspect_int=0;
@@ -1151,6 +1144,9 @@ void ofApp::midibiz()
   {
 
     ofxMidiMessage &message = midiMessages[i];
+    ofLogNotice() << "Processing MIDI message: status=" << message.status
+                  << " control=" << message.control
+                  << " value=" << message.value;
 
     if (message.status < MIDI_SYSEX)
     {

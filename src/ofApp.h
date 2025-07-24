@@ -30,7 +30,6 @@ public:
   void midibiz();
   void midibizOld();
   void newMidiMessage(ofxMidiMessage &eventArgs);
-  void midiSetup();
 
   vector<string> midiPortNames;
   int currentMidiPortIndex = 0;
