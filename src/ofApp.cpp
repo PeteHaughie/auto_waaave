@@ -35,7 +35,7 @@ bool wet_dry_switch = 1;
 // use definitely with all of the VSERPI devices
 // and anything else doing like 480i/p over hdmi
 // 1 is corner cropping to fill the screen
-int hdmi_aspect_ratio_switch = 0;
+int hdmi_aspect_ratio_switch = 1;
 
 float az = 1.0;
 float sx = 0;
@@ -364,13 +364,20 @@ void ofApp::draw()
   // videoGrabber.getTextureReference().draw(0, 0, 320, 640);
   if (scaleswitch == 0)
   {
-    cam.draw(0, 0, 320, 240);
+    // cam.draw(0, 0, 320, 240);
+    if (videoInputManager.getInput()->isInitialized())
+    {
+      videoInputManager.getInput()->draw(0, 0, 320, 240);
+    }
   }
   if (scaleswitch == 1)
   {
     if (hdmi_aspect_ratio_switch == 0)
     {
-      cam.draw(0, 0, 640, 480);
+      if (videoInputManager.getInput()->isInitialized())
+      {
+        videoInputManager.getInput()->draw(0, 0, 640, 480);
+      }
     }
     if (hdmi_aspect_ratio_switch == 1)
     {
@@ -510,7 +517,10 @@ void ofApp::draw()
   {
     if (hdmi_aspect_ratio_switch == 0)
     {
-      cam.draw(0, 0, 640, 480);
+      if (videoInputManager.getInput()->isInitialized())
+      {
+        videoInputManager.getInput()->draw(0, 0, 640, 480);
+      }
     }
     if (hdmi_aspect_ratio_switch == 1)
     {
@@ -717,12 +727,15 @@ void ofApp::p_lockUpdate()
 //-------------------------------------------------------------
 void ofApp::inputUpdate()
 {
-  cam.update();
+  videoInputManager.update();
   // corner crop and stretch to preserve hd aspect ratio
   if (hdmi_aspect_ratio_switch == 1)
   {
     aspect_fix_fbo.begin();
-    cam.draw(0, 0, 853, 480);
+    if (videoInputManager.getInput()->isInitialized())
+    {
+      videoInputManager.getInput()->draw(0, 0, 853, 480);
+    }
     aspect_fix_fbo.end();
   }
 }
@@ -741,6 +754,8 @@ void ofApp::p_lockClear()
 //------------------------------------------------------------
 void ofApp::midiSetup()
 {
+  incrementMidiDeviceID();
+  /*
   // print input ports to console
   midiIn.listInPorts();
 
@@ -758,6 +773,7 @@ void ofApp::midiSetup()
 
   // print received messages to the console
   midiIn.setVerbose(true);
+  */
 }
 
 //-------------------------------------------------------------
@@ -795,19 +811,7 @@ void ofApp::fbDeclareAndAllocate()
 //-------------------------------------------------------------
 void ofApp::inputSetup()
 {
-  auto devices = cam.listDevices();
-  for (auto &dev : devices)
-  {
-    ofLogNotice() << "Found device: " << dev.deviceName;
-  }
-  // pass in the settings and it will start the camera
-  cam.setDeviceID(camID);
-  cam.setDesiredFrameRate(30);
-  cam.setup(width, height);
-  if (!cam.isInitialized())
-  {
-    ofLogError() << "Camera failed to initialize!";
-  }
+  videoInputManager.setup(ofGetWidth(), ofGetHeight());
 }
 
 //--------------------------------------------------------------
@@ -831,6 +835,14 @@ void ofApp::keyPressed(int key)
       fb0_delayamount = framebufferLength - fb0_delayamount;
     } // endiffb0
   } // endifkey
+
+  // aspect ratio fix
+  if (key == 'q')
+  {
+    hdmi_aspect_ratio_switch = 1 - hdmi_aspect_ratio_switch;
+    ofLog() << "hdmi_aspect_ratio_switch: "
+             << hdmi_aspect_ratio_switch;
+  }
 
   // fb1 mix
   if (key == 'o')
@@ -1039,31 +1051,9 @@ void ofApp::keyPressed(int key)
     x_skew -= .01;
   }
 
-  if (key == ' ')
+  if (key == ' ' || key == '+')
   {
-    // increment the cam id
-    vector<string> devices;
-    for (int i = 0; i < cam.listDevices().size(); i++)
-    {
-      devices.push_back(cam.listDevices()[i].deviceName);
-    }
-    if (devices.empty())
-    {
-      cout << "no camera devices found" << endl;
-      return;
-    }
-    else
-    {
-      for (unsigned long int i = 0; i < devices.size(); i++)
-      {
-        cout << devices[i] << endl;
-      }
-      camID = (camID + 1) % devices.size(); // wrap camID correctly
-      ofLog() << "camID: " << camID << " device name: " << devices[camID];
-      cam.close();
-      cam.setDeviceID(camID);
-      cam.setup(width, height);
-    }
+    videoInputManager.incrementDeviceID();
   }
 
   if (key == '8')
@@ -4716,3 +4706,64 @@ void ofApp::midibizOld()
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key) {}
+
+//--------------------------------------------------------------
+void ofApp::incrementMidiDeviceID()
+{
+  midiIn.listInPorts(); // Refresh the port list
+  int numPorts = midiIn.getNumInPorts();
+  midiPortNames.clear();
+  for (int i = 0; i < numPorts; ++i)
+  {
+    midiPortNames.push_back(midiIn.getInPortName(i));
+  }
+
+#ifdef __linux__
+  // Filter out "Through" ports
+  std::vector<int> realPorts;
+  for (int i = 0; i < numPorts; ++i)
+  {
+    if (midiPortNames[i].find("Through") == std::string::npos)
+    {
+      realPorts.push_back(i);
+    }
+  }
+  if (realPorts.empty())
+  {
+    ofLogError() << "No real MIDI input ports found!";
+    return;
+  }
+
+  // Cycle through real ports only
+  static int realPortIdx = -1;
+  realPortIdx = (realPortIdx + 1) % realPorts.size();
+  int portToOpen = realPorts[realPortIdx];
+
+  midiIn.closePort();
+  midiIn.openPort(portToOpen);
+  ofLogNotice() << "Switched to MIDI port: " << midiPortNames[portToOpen];
+#else
+  if (numPorts == 0)
+  {
+    ofLogError() << "No MIDI input ports found!";
+    return;
+  }
+
+  int attempts = 0;
+  do
+  {
+    currentMidiPortIndex = (currentMidiPortIndex + 1) % numPorts;
+    attempts++;
+    midiIn.closePort();
+    midiIn.openPort(currentMidiPortIndex);
+    string portName = midiPortNames[currentMidiPortIndex];
+    if (!portName.empty())
+    {
+      ofLogNotice() << "Switched to MIDI port: " << portName;
+      return;
+    }
+  } while (attempts < numPorts);
+
+  ofLogError() << "No real MIDI input ports found!";
+#endif
+}

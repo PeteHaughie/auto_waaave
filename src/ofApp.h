@@ -13,6 +13,7 @@
 #include "ofMain.h"
 #include "ofxMidi.h"
 #include "ofxProcessFFT.h"
+#include "VideoInputManager.h"
 
 class ofApp : public ofBaseApp, public ofxMidiListener
 {
@@ -30,9 +31,18 @@ public:
   void midibizOld();
   void newMidiMessage(ofxMidiMessage &eventArgs);
   void midiSetup();
+
+  vector<string> midiPortNames;
+  int currentMidiPortIndex = 0;
+
+  bool midiDeviceConnected = false;
+  uint64_t lastMidiPollTime = 0;
+  const uint64_t midiPollInterval = 2000; // ms
+
   ofxMidiIn midiIn;
   std::vector<ofxMidiMessage> midiMessages;
   std::size_t maxMessages = 10; //< max number of messages to keep track of
+  void incrementMidiDeviceID();
 
   ofShader shaderMixer;
   ofShader shaderSharpen;
@@ -44,7 +54,8 @@ public:
 
   void inputSetup();
   void inputUpdate();
-  ofVideoGrabber cam;
+  // ofVideoGrabber cam;
+  VideoInputManager videoInputManager;
   unsigned long int camID = 0, prevCamID = 0;
   unsigned long int midiID = 0, prevMidiID = 0;
 
